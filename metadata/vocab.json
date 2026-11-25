@@ -1,0 +1,25 @@
+{
+  "doc_types": [
+    "filing",
+    "memo",
+    "letter",
+    "transcript",
+    "screen",
+    "note"
+  ],
+  "statuses": [
+    "draft",
+    "active",
+    "archived"
+  ],
+  "themes": [
+    "capital-allocation",
+    "unit-economics",
+    "balance-sheet",
+    "marketplace",
+    "energy",
+    "royalties",
+    "risk-management",
+    "macro"
+  ]
+}

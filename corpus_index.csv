@@ -1,0 +1,4 @@
+id,title,doc_type,status,tickers,themes,date,source_format,path,bytes,lines
+capital-allocation-framework,Incremental ROIC and Capital Allocation Checklist,memo,active,EXMPL,capital-allocation|balance-sheet,2026-09-12,md,corpus/samples/capital-allocation-framework.md,1038,20
+marketplace-unit-economics-note,Two-Sided Marketplace Unit Economics Framework,note,active,MKTPL,unit-economics|marketplace,2026-10-04,md,corpus/samples/marketplace-unit-economics-note.md,956,19
+royalty-balance-sheet-screen,Commodity Royalty and Balance-Sheet Risk Screen,screen,active,ROYL,energy|royalties|balance-sheet|risk-management,2026-11-01,md,corpus/samples/royalty-balance-sheet-screen.md,863,19
