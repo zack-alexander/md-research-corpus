@@ -48,6 +48,10 @@ def _cmd_index(args: argparse.Namespace) -> int:
             print("Missing from disk:", file=sys.stderr)
             for item in audit.missing_from_disk:
                 print(f"  - {item}", file=sys.stderr)
+        if audit.stale_rows:
+            print("Out of date in index (metadata, size, or line count changed):", file=sys.stderr)
+            for item in audit.stale_rows:
+                print(f"  ~ {item}", file=sys.stderr)
         return 1
 
     entries = build_inventory(root)
@@ -70,14 +74,18 @@ def _cmd_validate(args: argparse.Namespace) -> int:
 
 def _cmd_search(args: argparse.Namespace) -> int:
     root = Path(args.root).resolve()
-    matches = search_corpus(
-        root,
-        args.pattern,
-        ticker=args.ticker,
-        theme=args.theme,
-        doc_type=args.doc_type,
-        limit=args.limit,
-    )
+    try:
+        matches = search_corpus(
+            root,
+            args.pattern,
+            ticker=args.ticker,
+            theme=args.theme,
+            doc_type=args.doc_type,
+            limit=args.limit,
+        )
+    except (ValueError, RuntimeError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
     if args.json:
         payload = [
             {

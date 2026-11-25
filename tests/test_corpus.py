@@ -109,3 +109,36 @@ def test_cli_search_json_and_validate(capsys) -> None:
     parsed = json.loads(captured.out)
     assert len(parsed) == 1
     assert parsed[0]["tickers"] == ["ROYL"]
+
+
+def test_index_check_detects_stale_rows(tmp_path: Path) -> None:
+    corpus_dir = tmp_path / "corpus"
+    corpus_dir.mkdir()
+    doc = corpus_dir / "memo.md"
+    doc.write_text(
+        "---\nid: memo\ntitle: Original Title\ndoc_type: memo\nstatus: active\n"
+        "date: 2026-11-15\n---\nOriginal body line.\n",
+        encoding="utf-8",
+    )
+
+    index_path = tmp_path / "corpus_index.csv"
+    write_index(build_inventory(tmp_path), index_path)
+    assert audit_index(tmp_path, index_path).is_clean
+
+    doc.write_text(
+        "---\nid: memo\ntitle: Retitled\ndoc_type: memo\nstatus: active\n"
+        "date: 2026-11-15\n---\nEdited body line.\n",
+        encoding="utf-8",
+    )
+    audit = audit_index(tmp_path, index_path)
+    assert not audit.is_clean
+    assert audit.missing_from_index == []
+    assert audit.missing_from_disk == []
+    assert audit.stale_rows == ["corpus/memo.md"]
+
+
+def test_search_reports_friendly_errors_for_invalid_patterns(capsys) -> None:
+    assert main(["search", "[unclosed", "--root", str(REPO_ROOT)]) == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "Invalid search pattern" in captured.err

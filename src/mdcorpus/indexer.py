@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import csv
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from mdcorpus.frontmatter import parse_document
@@ -62,10 +62,11 @@ class IndexAudit:
 
     missing_from_index: list[str]
     missing_from_disk: list[str]
+    stale_rows: list[str] = field(default_factory=list)
 
     @property
     def is_clean(self) -> bool:
-        return not self.missing_from_index and not self.missing_from_disk
+        return not self.missing_from_index and not self.missing_from_disk and not self.stale_rows
 
 
 def slugify(value: str) -> str:
@@ -143,16 +144,32 @@ def write_index(entries: list[IndexEntry], output_path: Path) -> None:
 
 
 def audit_index(root: Path, index_path: Path, corpus_subdir: str = "corpus") -> IndexAudit:
-    """Compare on-disk corpus documents against ``corpus_index.csv``."""
-    disk_paths = {entry.path for entry in build_inventory(root, corpus_subdir=corpus_subdir)}
-    indexed_paths: set[str] = set()
+    """Compare on-disk corpus documents against ``corpus_index.csv``.
+
+    Flags paths missing on either side as well as indexed rows whose recorded
+    fields (title, metadata, size, line count) no longer match the file on disk.
+    """
+    disk_entries = {
+        entry.path: entry for entry in build_inventory(root, corpus_subdir=corpus_subdir)
+    }
+    indexed_rows: dict[str, dict[str, str]] = {}
     if index_path.exists():
         with index_path.open("r", newline="", encoding="utf-8") as handle:
             for row in csv.DictReader(handle):
                 if row.get("path"):
-                    indexed_paths.add(row["path"])
+                    indexed_rows[row["path"]] = row
+
+    stale_rows: list[str] = []
+    for rel_path, entry in disk_entries.items():
+        row = indexed_rows.get(rel_path)
+        if row is None:
+            continue
+        expected = {key: str(value) for key, value in entry.as_dict().items()}
+        if any((row.get(key) or "") != expected[key] for key in FIELDNAMES):
+            stale_rows.append(rel_path)
 
     return IndexAudit(
-        missing_from_index=sorted(disk_paths - indexed_paths),
-        missing_from_disk=sorted(indexed_paths - disk_paths),
+        missing_from_index=sorted(disk_entries.keys() - indexed_rows.keys()),
+        missing_from_disk=sorted(indexed_rows.keys() - disk_entries.keys()),
+        stale_rows=sorted(stale_rows),
     )

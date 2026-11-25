@@ -20,7 +20,7 @@ flowchart LR
 
 - **Zero mandatory runtime dependencies** — core parsing, indexing, validation, and search use the Python 3.11+ standard library; optional `[parsers]` extra enables PDF/DOCX/XLSX conversion.
 - **Controlled vocabularies** — enforce valid `doc_type`, `status`, `themes`, ISO dates, and unique IDs across every note via `metadata/vocab.json`.
-- **Index drift detection** — `mdcorpus index --check` exits nonzero in CI if `corpus_index.csv` falls out of sync with files on disk.
+- **Index drift detection** — `mdcorpus index --check` exits nonzero in CI if `corpus_index.csv` falls out of sync with files on disk (missing files, removed documents, or rows whose metadata, size, or line count changed).
 - **Cited, metadata-filtered search** — filter by `--ticker`, `--theme`, or `--doc-type`, automatically using `ripgrep` when installed and falling back to Python regex otherwise, with `--json` output for LLM/agent pipelines.
 
 ## Quickstart

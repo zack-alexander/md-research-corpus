@@ -103,6 +103,11 @@ def search_corpus(
     prefer_rg: bool = True,
 ) -> list[SearchMatch]:
     """Search Markdown corpus documents and return line-cited matches."""
+    try:
+        re.compile(pattern)
+    except re.error as exc:
+        raise ValueError(f"Invalid search pattern {pattern!r}: {exc}") from exc
+
     corpus_dir = root / corpus_subdir
     if not corpus_dir.exists():
         return []
